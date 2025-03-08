@@ -1,39 +1,37 @@
 /* Software License Agreement (MIT License)
- *
- *  Copyright (c) 2019-, Dimitrios Kanoulas
- *
- *  All rights reserved.
- *
- *  Redistribution and use in source and binary forms, with or without
- *  modification, are permitted provided that the following conditions
- *  are met:
- *
- *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   * Redistributions in binary form must reproduce the above
- *     copyright notice, this list of conditions and the following
- *     disclaimer in the documentation and/or other materials provided
- *     with the distribution.
- *   * Neither the name of the copyright holder(s) nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- */
-
+*
+*  Copyright (c) 2019-, Dimitrios Kanoulas
+*
+*  All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without
+*  modification, are permitted provided that the following conditions
+*  are met:
+*
+*   * Redistributions of source code must retain the above copyright
+*     notice, this list of conditions and the following disclaimer.
+*   * Redistributions in binary form must reproduce the above
+*     copyright notice, this list of conditions and the following
+*     disclaimer in the documentation and/or other materials provided
+*     with the distribution.
+*   * Neither the name of the copyright holder(s) nor the names of its
+*     contributors may be used to endorse or promote products derived
+*     from this software without specific prior written permission.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+*  POSSIBILITY OF SUCH DAMAGE.
+*/
 #include <obj_rec_tutorial/obj_rec_tutorial.h>
-
 typedef pcl::PointXYZRGBA PointT;
 typedef pcl::PointCloud<PointT> PointC;
 typedef PointC::Ptr PointCPtr;
@@ -45,6 +43,7 @@ ObjRecTutorial::ObjRecTutorial (ros::NodeHandle &nh):
   g_cloud_filtered2 (new PointC), // filtered point cloud
   g_cloud_plane (new PointC), // plane point cloud
   g_cloud_cylinder (new PointC), // cylinder point cloud
+  g_cloud_box (new PointC), // box point cloud
   g_tree_ptr (new pcl::search::KdTree<PointT> ()), // KdTree
   g_cloud_normals (new pcl::PointCloud<pcl::Normal>), // segmentation
   g_cloud_normals2 (new pcl::PointCloud<pcl::Normal>), // segmentation
@@ -52,6 +51,7 @@ ObjRecTutorial::ObjRecTutorial (ros::NodeHandle &nh):
   g_inliers_cylinder (new pcl::PointIndices), // cylidenr seg
   g_coeff_plane (new pcl::ModelCoefficients), // plane coeff
   g_coeff_cylinder (new pcl::ModelCoefficients), // cylinder coeff
+  g_coeff_box (new pcl::ModelCoefficients), // box coeff
   debug_ (false)
 {
   g_nh = nh;
@@ -80,15 +80,21 @@ ObjRecTutorial::cloudCallBackOne
   pcl::fromPCLPointCloud2 (g_pcl_pc, *g_cloud_ptr);
 
   // Perform the filtering
-  //applyVX (g_cloud_ptr, g_cloud_filtered);
-  //applyPT (g_cloud_ptr, g_cloud_filtered);
+  // applyVX (g_cloud_ptr, g_cloud_filtered);
+  // applyPT (g_cloud_ptr, g_cloud_filtered);
+  // Copy the point cloud
+  pcl::copyPointCloud(*g_cloud_ptr, *g_cloud_filtered);
+  
+
   findNormals (g_cloud_ptr);
   segPlane (g_cloud_ptr);
-  //segCylind (g_cloud_filtered);
-  //findCylPose (g_cloud_cylinder);
+  // segCylind (g_cloud_filtered);
+  segBox (g_cloud_filtered2);
+  // findCylPose (g_cloud_cylinder);
+  findBoxPose (g_cloud_box);
     
   // Publish the data
-  //ROS_INFO ("Publishing Filtered Cloud 2");
+  ROS_INFO ("Publishing Filtered Cloud 2");
   pubFilteredPCMsg (g_pub_cloud, *g_cloud_filtered2);
   
   return;
@@ -203,6 +209,50 @@ ObjRecTutorial::segCylind (PointCPtr &in_cloud_ptr)
   
   return;
 }
+////////////////////////////////////////////////////////////////////////////////
+void 
+ObjRecTutorial::segBox(PointCPtr &in_cloud_ptr)
+{
+  g_cloud_box->points.clear();
+  float thresh = 0.1;
+  // Define target RGB values
+  std::map<std::string, Eigen::Vector3f> color_map = {
+      {"blue", Eigen::Vector3f(0.1, 0.1, 0.8)},
+      {"red", Eigen::Vector3f(0.8, 0.1, 0.1)},
+      {"purple", Eigen::Vector3f(0.8, 0.1, 0.8)}};
+
+  std::string detected_color = "unknown";
+
+  // Iterate through point cloud and filter by color
+  for (const auto &point : in_cloud_ptr->points) {
+    float r = static_cast<float>(point.r) / 255.0;
+    float g = static_cast<float>(point.g) / 255.0;
+    float b = static_cast<float>(point.b) / 255.0;
+
+    Eigen::Vector3f point_rgb(r, g, b);
+    // ROS_INFO_STREAM("Point RGB values: " << r << ", " << g << ", " << b);
+    
+    for (const auto& [color_name, target_rgb] : color_map) {
+      if ((point_rgb - target_rgb).norm() < thresh && detected_color == "unknown") {
+        detected_color = color_name;
+      }
+      if ((point_rgb - target_rgb).norm() < thresh && detected_color == color_name) {
+        g_cloud_box->points.push_back(point);
+      }
+    }
+  }
+
+  g_cloud_box->width = g_cloud_box->points.size();
+  g_cloud_box->height = 1;
+  g_cloud_box->is_dense = false;
+
+  // Publish the segmented box result
+  pubFilteredPCMsg(g_pub_cloud, *g_cloud_box);
+  ROS_INFO_STREAM("Detected color: " << detected_color);
+  ROS_INFO_STREAM("PointCloud representing the " << detected_color << " box component: " << g_cloud_box->size() << " data points.");
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 void
@@ -232,6 +282,38 @@ ObjRecTutorial::findCylPose (PointCPtr &in_cloud_ptr)
   }
   
   publishPose (g_cyl_pt_msg_out);
+  
+  return;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void
+ObjRecTutorial::findBoxPose (PointCPtr &in_cloud_ptr)
+{
+  Eigen::Vector4f centroid_in;
+  pcl::compute3DCentroid(*in_cloud_ptr, centroid_in);
+  
+  g_box_pt_msg.header.frame_id = g_input_pc_frame_id_;
+  g_box_pt_msg.header.stamp = ros::Time (0);
+  g_box_pt_msg.point.x = centroid_in[0];
+  g_box_pt_msg.point.y = centroid_in[1];
+  g_box_pt_msg.point.z = centroid_in[2];
+  
+  // Transform the point to new frame
+  geometry_msgs::PointStamped g_box_pt_msg_out;
+  try
+  {
+    g_listener_.transformPoint ("panda_link0",  // bad styling
+                                g_box_pt_msg,
+                                g_box_pt_msg_out);
+    //ROS_INFO ("trying transform...");
+  }
+  catch (tf::TransformException& ex)
+  {
+    ROS_ERROR ("Received a transformation exception: %s", ex.what());
+  }
+  
+  publishPose (g_box_pt_msg_out);
   
   return;
 }
