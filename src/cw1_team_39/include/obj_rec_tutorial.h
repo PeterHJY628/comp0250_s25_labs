@@ -179,9 +179,6 @@ class ObjRecTutorial
     
     /** \brief ROS geometry message point. */
     geometry_msgs::PointStamped g_cyl_pt_msg, g_box_pt_msg;
-    
-    /** \brief ROS geometry message point. */
-    geometry_msgs::PointStamped g_box_pt_msg;
 
     /** \brief ROS pose publishers. */
     ros::Publisher g_pub_pose;
@@ -243,11 +240,8 @@ class ObjRecTutorial
     /** \brief Model coefficients for the culinder segmentation. */
     pcl::ModelCoefficients::Ptr g_coeff_cylinder, g_coeff_box;
 
-    /** \brief Model coefficients for the box segmentation. */
-    pcl::ModelCoefficients::Ptr g_coeff_box;
-    
     /** \brief Point cloud to hold plane and cylinder points. */
-    PointCPtr g_cloud_plane, g_cloud_cylinder, g_cloud_box, g_cloud_box;
+    PointCPtr g_cloud_plane, g_cloud_cylinder, g_cloud_box;
 
     /** \brief Point cloud to hold different colors. */
     PointCPtr g_cloud_red, g_cloud_blue, g_cloud_purple;

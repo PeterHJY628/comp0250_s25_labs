@@ -129,6 +129,7 @@ include_directories(
 # Declare a C++ library
 add_library(${PROJECT_NAME}_cw1_class_lib
   src/cw1_class.cpp
+  src/obj_rec_tutorial.cpp # Add the source file containing ObjRecTutorial class
 )
 
 ## Add cmake target dependencies of the library
