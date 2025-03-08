@@ -1,4 +1,13 @@
 #include "cw1_class.h"
+#include <iostream>
+#include <stdio.h>
+#include <ros/ros.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PointStamped.h>
+
+
+
+
 
 cw1::cw1(ros::NodeHandle nh)
   : nh_(nh)
@@ -18,6 +27,40 @@ cw1::cw1(ros::NodeHandle nh)
   ROS_INFO("cw1 class initialised. Services for Task1/2/3 ready.");
 }
 
+// Helper function to print PoseStamped
+void cw1::printPoseStamped(const geometry_msgs::PoseStamped &pose)
+{
+  std::cout << "PoseStamped:" << std::endl;
+  std::cout << "  Header:" << std::endl;
+  std::cout << "    seq: " << pose.header.seq << std::endl;
+  std::cout << "    stamp: " << pose.header.stamp << std::endl;
+  std::cout << "    frame_id: " << pose.header.frame_id << std::endl;
+  std::cout << "  Pose:" << std::endl;
+  std::cout << "    Position: ("
+            << pose.pose.position.x << ", "
+            << pose.pose.position.y << ", "
+            << pose.pose.position.z << ")" << std::endl;
+  std::cout << "    Orientation: ("
+            << pose.pose.orientation.x << ", "
+            << pose.pose.orientation.y << ", "
+            << pose.pose.orientation.z << ", "
+            << pose.pose.orientation.w << ")" << std::endl;
+}
+
+// Helper function to print PointStamped
+void cw1::printPointStamped(const geometry_msgs::PointStamped &point)
+{
+  std::cout << "PointStamped:" << std::endl;
+  std::cout << "  Header:" << std::endl;
+  std::cout << "    seq: " << point.header.seq << std::endl;
+  std::cout << "    stamp: " << point.header.stamp << std::endl;
+  std::cout << "    frame_id: " << point.header.frame_id << std::endl;
+  std::cout << "  Point: ("
+            << point.point.x << ", "
+            << point.point.y << ", "
+            << point.point.z << ")" << std::endl;
+}
+
 /**
  * @brief Task1 callback: pick-and-place a single object.
  */
@@ -29,17 +72,30 @@ bool cw1::t1_callback(cw1_world_spawner::Task1Service::Request &request,
   // 1) Extract object and basket positions
   geometry_msgs::PoseStamped object_pose = request.object_loc;
   geometry_msgs::PointStamped basket_point = request.goal_loc;
-
+  printPoseStamped(object_pose);
+  printPointStamped(basket_point);
   // 2) Define a "pre-grasp" pose above the object
   geometry_msgs::PoseStamped pre_grasp_pose = object_pose;
-  pre_grasp_pose.pose.position.z += 0.10; // 10cm above
-
+  pre_grasp_pose.pose.position.z += 0.20; // 20cm above
+  pre_grasp_pose.pose.orientation.w = 0; // keep orientation neutral
+  pre_grasp_pose.pose.orientation.x = 1;
+  pre_grasp_pose.pose.orientation.y = 0;
+  pre_grasp_pose.pose.orientation.z = 0;
   // 3) Define a place pose above the basket
+  object_pose.pose.orientation.w = 0; // keep orientation neutral
+  object_pose.pose.orientation.x = 1;
+  object_pose.pose.orientation.y = 0;
+  object_pose.pose.orientation.z = 0;
+  object_pose.pose.position.z += 0.13;
+  // 4) Define a place pose above the basket
   geometry_msgs::PoseStamped place_pose;
   place_pose.header = basket_point.header;
   place_pose.pose.position = basket_point.point;
-  place_pose.pose.position.z += 0.10; // 10cm above basket
-  place_pose.pose.orientation.w = 1.0; // keep orientation neutral                                   
+  place_pose.pose.position.z += 0.25; // 10cm above basket
+  place_pose.pose.orientation.x = 1.0; // keep orientation neutral
+  place_pose.pose.orientation.y = 0.0; // keep orientation neutral
+  place_pose.pose.orientation.z = 0.0; // keep orientation neutral
+  place_pose.pose.orientation.w = 0.0; // keep orientation neutral                                 
   ROS_WARN("START..........................................................TASK1");
   // 4) Open the gripper
   if(!moveGripper(gripper_open_))
@@ -124,6 +180,9 @@ bool cw1::moveArm(const geometry_msgs::Pose target_pose)
   ROS_INFO("Setting pose target");
   arm_group_.setPoseTarget(target_pose);
 
+  std::string planning_frame = arm_group_.getPlanningFrame();
+  ROS_INFO("Planning frame: %s", planning_frame.c_str());
+
   // create a movement plan for the arm
   ROS_INFO("Attempting to plan the path");
   moveit::planning_interface::MoveGroupInterface::Plan my_plan;
@@ -136,10 +195,13 @@ bool cw1::moveArm(const geometry_msgs::Pose target_pose)
   // execute the planned path
   if (success) {
     arm_group_.move();
+    // printf("Press any key to continue...");
+    // getchar();
     return true;
   } else {
     return false;
   }
+  
 }
 
 
@@ -149,6 +211,7 @@ bool cw1::moveArm(const geometry_msgs::Pose target_pose)
 bool cw1::moveGripper(float width)
 {
   // safety checks in case width exceeds safe values
+  if (width > gripper_open_) 
     width = gripper_open_;
   if (width < gripper_closed_) 
     width = gripper_closed_;
@@ -173,6 +236,8 @@ bool cw1::moveGripper(float width)
   if (success) {
     hand_group_.move();
     return true;
+    // printf("Press any key to continue...");
+    // getchar();
   } else {
     return false;
   }
