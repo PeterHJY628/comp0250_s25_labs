@@ -31,10 +31,10 @@
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
 */
-#include <obj_rec_tutorial/obj_rec_tutorial.h>
+
 #include "obj_rec_tutorial.h"
 typedef pcl::PointXYZRGBA PointT;
-typedef pcl::PointCloud<PointT> PointC;
+typedef pcl::PointCloud<PointT> PointC; 
 typedef PointC::Ptr PointCPtr;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -252,7 +252,7 @@ ObjRecTutorial::segBox(PointCPtr &in_cloud_ptr)
   ROS_INFO_STREAM("PointCloud representing the " << detected_color << " box component: " << g_cloud_box->size() << " data points.");
 }
 ////////////////////////////////////////////////////////////////////////////////
-ObjRecTutorial::findCylPose (PointCPtr &in_cloud_ptr)
+void ObjRecTutorial::findCylPose (PointCPtr &in_cloud_ptr)
 {
   Eigen::Vector4f centroid_in;
   pcl::compute3DCentroid(*in_cloud_ptr, centroid_in);

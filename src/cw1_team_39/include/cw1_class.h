@@ -42,7 +42,7 @@ typedef PointC::Ptr PointCPtr;
 #include "cw1_world_spawner/Task1Service.h"
 #include "cw1_world_spawner/Task2Service.h"
 #include "cw1_world_spawner/Task3Service.h"
-
+#include "obj_rec_tutorial.h"
 class cw1
 {
 public:
@@ -122,6 +122,9 @@ private:
   float target_size_ = 0.1; // Size of target object to pick up
 
   /** \brief target and object pose */
+
+  ObjRecTutorial obj_rec_tutorial;
+
   Eigen::Vector4f target_pose_red;
   Eigen::Vector4f target_pose_blue;
   Eigen::Vector4f target_pose_purple;

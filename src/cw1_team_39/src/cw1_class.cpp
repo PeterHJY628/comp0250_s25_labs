@@ -5,14 +5,11 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PointStamped.h>
 
-
-
-
-
 cw1::cw1(ros::NodeHandle nh)
   : nh_(nh)
   , arm_group_("panda_arm")  // 在初始化列表中直接指定 group 名
-  , hand_group_("hand")      // 同上
+  , hand_group_("hand")
+  , obj_rec_tutorial(nh)
 {
   // Advertise the three task services
   t1_service_ = nh_.advertiseService("/task1_start", &cw1::t1_callback, this);
@@ -23,7 +20,6 @@ cw1::cw1(ros::NodeHandle nh)
   arm_group_.setPlanningTime(10.0);   // arm
   hand_group_.setPlanningTime(5.0);   // gripper
   arm_group_.setPoseReferenceFrame("panda_link0"); // 若需要，可在 SRDF 中检查
-
   ROS_INFO("cw1 class initialised. Services for Task1/2/3 ready.");
 }
 
@@ -95,7 +91,8 @@ bool cw1::t1_callback(cw1_world_spawner::Task1Service::Request &request,
   place_pose.pose.orientation.x = 1.0; // keep orientation neutral
   place_pose.pose.orientation.y = 0.0; // keep orientation neutral
   place_pose.pose.orientation.z = 0.0; // keep orientation neutral
-  place_pose.pose.orientation.w = 0.0; // keep orientation neutral                                 
+  place_pose.pose.orientation.w = 0.0; // keep orientation neutral
+                                 
   ROS_WARN("START..........................................................TASK1");
   // 4) Open the gripper
   if(!moveGripper(gripper_open_))
@@ -157,7 +154,19 @@ bool cw1::t2_callback(cw1_world_spawner::Task2Service::Request &request,
                       cw1_world_spawner::Task2Service::Response &response)
 {
   ROS_INFO("Task 2 callback triggered");
-  // TODO: implement color detection logic (PCL or similar)
+  // Subscribe to the point cloud topic and get one message at 30fps
+  ros::Rate rate(30);
+  while (ros::ok()) {
+    boost::shared_ptr<const sensor_msgs::PointCloud2> cloud_msg = 
+      ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/r200/camera/depth_registered/points", nh_);
+    if (cloud_msg != nullptr) {
+      obj_rec_tutorial.cloudCallBackOne(cloud_msg);
+    } else {
+      ROS_ERROR("Failed to receive point cloud message");
+      return false;
+    }
+    rate.sleep();
+  }
   return true;
 }
 
@@ -249,7 +258,7 @@ bool cw1::moveGripper(float width)
 void cw1::segColors(PointCPtr &in_cloud_ptr)
 {
   std::array<PointCPtr, 3> clouds = {g_cloud_red, g_cloud_blue, g_cloud_purple};
-  for (auto& cloud : clouds) {
+  for (PointCPtr& cloud : clouds) {
     cloud->points.clear();
   }
 
@@ -285,7 +294,7 @@ void cw1::segColors(PointCPtr &in_cloud_ptr)
     }
   }
 
-  for (auto& cloud : clouds) {
+  for (PointCPtr& cloud : clouds) {
     cloud->width = cloud->points.size();
     cloud->height = 1;
     cloud->is_dense = false;
@@ -295,8 +304,6 @@ void cw1::segColors(PointCPtr &in_cloud_ptr)
   }
   pubFilteredPCMsg(g_pub_cloud, clouds);
   // Publish the segmented box result
-  
-  
 }
 
 void cw1::pubFilteredPCMsg (ros::Publisher &pc_pub, std::array<PointCPtr, 3> &clouds)
