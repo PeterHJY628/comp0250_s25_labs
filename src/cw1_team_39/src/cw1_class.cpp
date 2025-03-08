@@ -264,7 +264,7 @@ void cw1::segColors(PointCPtr &in_cloud_ptr)
     Eigen::Vector3f point_rgb(r, g, b);
     
     for (const auto& [color_name, target_rgb] : cw1::color_map) {
-      if ((point_rgb - target_rgb).norm() < thresh) {
+      if ((point_rgb - target_rgb).norm() < cw1::color_thresh_) {
       detected_color = color_name;
       break;
       }
@@ -289,20 +289,24 @@ void cw1::segColors(PointCPtr &in_cloud_ptr)
     cloud->width = cloud->points.size();
     cloud->height = 1;
     cloud->is_dense = false;
-    pubFilteredPCMsg(g_pub_cloud, *cloud);
+    
+    std::string color = cloud == g_cloud_red ? "red" : cloud == g_cloud_blue ? "blue" : "purple";
+    ROS_INFO_STREAM("PointCloud representing the " << color << " box component: " << cloud->size() << " data points.");
   }
-
+  pubFilteredPCMsg(g_pub_cloud, clouds);
   // Publish the segmented box result
   
-  ROS_INFO_STREAM("Detected color: " << detected_color);
-  ROS_INFO_STREAM("PointCloud representing the " << detected_color << " box component: " << g_cloud_box->size() << " data points.");
+  
 }
 
-void cw1::pubFilteredPCMsg (ros::Publisher &pc_pub,PointC &pc)
+void cw1::pubFilteredPCMsg (ros::Publisher &pc_pub, std::array<PointCPtr, 3> &clouds)
 {
-  pcl::toROSMsg(pc, g_cloud_filtered_msg);
-  pc_pub.publish (g_cloud_filtered_msg);
-  return;
+  // Publish the data
+  for (auto& cloud : clouds) {
+    sensor_msgs::PointCloud2 cloud_msg;
+    pcl::toROSMsg(*cloud, cloud_msg);
+    pc_pub.publish(cloud_msg);
+  }
 }
 
 std::map<std::string, std::vector<PointCPtr>> cw1::segObjects(PointCPtr &in_cloud_ptr, std::string color)
@@ -312,4 +316,9 @@ std::map<std::string, std::vector<PointCPtr>> cw1::segObjects(PointCPtr &in_clou
 
 void cw1::findObjectPoses(PointCPtr &in_cloud_ptr)
 {
+}
+
+bool cw1::isObjectDetected()
+{
+    return false;
 }

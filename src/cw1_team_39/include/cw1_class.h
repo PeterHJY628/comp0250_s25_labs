@@ -22,20 +22,22 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
  // PCL specific includes
- #include <pcl_conversions/pcl_conversions.h>
- #include <pcl/common/centroid.h>
- #include <pcl/point_cloud.h>
- #include <pcl/point_types.h>
- #include <pcl/filters/voxel_grid.h>
- #include <pcl/filters/passthrough.h>
- #include <pcl/filters/extract_indices.h>
- #include <pcl/features/normal_3d.h>
- #include <pcl/ModelCoefficients.h>
- #include <pcl/sample_consensus/method_types.h>
- #include <pcl/sample_consensus/model_types.h>
- #include <pcl/search/kdtree.h>
- #include <pcl/segmentation/sac_segmentation.h>
-
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/common/centroid.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/search/kdtree.h>
+#include <pcl/segmentation/sac_segmentation.h>
+typedef pcl::PointXYZRGBA PointT;
+typedef pcl::PointCloud<PointT> PointC;
+typedef PointC::Ptr PointCPtr;
 // Coursework service definitions
 #include "cw1_world_spawner/Task1Service.h"
 #include "cw1_world_spawner/Task2Service.h"
@@ -110,7 +112,7 @@ private:
   sensor_msgs::PointCloud2 g_cloud_red_msg;
   sensor_msgs::PointCloud2 g_cloud_blue_msg;
   sensor_msgs::PointCloud2 g_cloud_purple_msg;
-
+  ros::Publisher g_pub_cloud;
   std::map<std::string, Eigen::Vector3f> color_map = {
     {"b", Eigen::Vector3f(0.1, 0.1, 0.8)},
     {"r", Eigen::Vector3f(0.8, 0.1, 0.1)},
@@ -153,13 +155,15 @@ private:
   /**
    * @brief Check if an object of any color is detected
    */
-  std::bool isObjectDetected();
+  bool isObjectDetected();
 
   /**
    * @brief Get the target and object poses for the current task
    * @return Pair of target and object poses
    */
   std::pair<Eigen::Vector4f, Eigen::Vector4f> getTargetAndObject();
+
+  void pubFilteredPCMsg (ros::Publisher &pc_pub, std::array<PointCPtr, 3> &clouds);
 
 };
 
