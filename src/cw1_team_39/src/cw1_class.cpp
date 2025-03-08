@@ -91,7 +91,7 @@ bool cw1::t1_callback(cw1_world_spawner::Task1Service::Request &request,
   geometry_msgs::PoseStamped place_pose;
   place_pose.header = basket_point.header;
   place_pose.pose.position = basket_point.point;
-  place_pose.pose.position.z += 0.25; // 10cm above basket
+  place_pose.pose.position.z += 0.30; // 10cm above basket
   place_pose.pose.orientation.x = 1.0; // keep orientation neutral
   place_pose.pose.orientation.y = 0.0; // keep orientation neutral
   place_pose.pose.orientation.z = 0.0; // keep orientation neutral
@@ -154,12 +154,21 @@ bool cw1::t1_callback(cw1_world_spawner::Task1Service::Request &request,
  * @brief Task2 callback (detect basket colors).
  */
 bool cw1::t2_callback(cw1_world_spawner::Task2Service::Request &request,
-                      cw1_world_spawner::Task2Service::Response &response)
+  cw1_world_spawner::Task2Service::Response &response)
 {
-  ROS_INFO("Task 2 callback triggered");
-  // TODO: implement color detection logic (PCL or similar)
-  return true;
+ROS_INFO("Task 2 callback triggered");
+
+// Correct: basket_locs is a vector of PointStamped
+std::vector<geometry_msgs::PointStamped> basket_locs = request.basket_locs;
+
+// Iterate over each point in the vector
+for (const auto &point : basket_locs) {
+printPointStamped(point);
 }
+
+return true;
+}
+
 
 /**
  * @brief Task3 callback (multi-object color matching).
