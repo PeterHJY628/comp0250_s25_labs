@@ -32,44 +32,44 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OBJ_REC_TUTORIAL_H_
-#define OBJ_REC_TUTORIAL_H_
-
-#include <ros/ros.h>
-#include <stdlib.h>
-#include <iostream>
-
-// ROS includes
-#include <geometry_msgs/Pose.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/PointStamped.h>
-
-// PCL specific includes
-#include <pcl_conversions/pcl_conversions.h>
-//#include <pcl_ros/point_cloud.h>
-
-#include <pcl/common/centroid.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/passthrough.h>
-#include <pcl/filters/extract_indices.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl/ModelCoefficients.h>
-#include <pcl/sample_consensus/method_types.h>
-#include <pcl/sample_consensus/model_types.h>
-#include <pcl/search/kdtree.h>
-#include <pcl/segmentation/sac_segmentation.h>
-
-// TF specific includes
-#include <tf/transform_broadcaster.h>
-#include <tf/transform_listener.h>
-
-typedef pcl::PointXYZRGBA PointT;
-typedef pcl::PointCloud<PointT> PointC;
-typedef PointC::Ptr PointCPtr;
-
-/** \brief Object Recognition Tutorial.
+ #ifndef OBJ_REC_TUTORIAL_H_
+ #define OBJ_REC_TUTORIAL_H_
+ 
+ #include <ros/ros.h>
+ #include <stdlib.h>
+ #include <iostream>
+ 
+ // ROS includes
+ #include <geometry_msgs/Pose.h>
+ #include <geometry_msgs/PoseStamped.h>
+ #include <geometry_msgs/PointStamped.h>
+ 
+ // PCL specific includes
+ #include <pcl_conversions/pcl_conversions.h>
+ //#include <pcl_ros/point_cloud.h>
+ 
+ #include <pcl/common/centroid.h>
+ #include <pcl/point_cloud.h>
+ #include <pcl/point_types.h>
+ #include <pcl/filters/voxel_grid.h>
+ #include <pcl/filters/passthrough.h>
+ #include <pcl/filters/extract_indices.h>
+ #include <pcl/features/normal_3d.h>
+ #include <pcl/ModelCoefficients.h>
+ #include <pcl/sample_consensus/method_types.h>
+ #include <pcl/sample_consensus/model_types.h>
+ #include <pcl/search/kdtree.h>
+ #include <pcl/segmentation/sac_segmentation.h>
+ 
+ // TF specific includes
+ #include <tf/transform_broadcaster.h>
+ #include <tf/transform_listener.h>
+ 
+ typedef pcl::PointXYZRGBA PointT;
+ typedef pcl::PointCloud<PointT> PointC;
+ typedef PointC::Ptr PointCPtr;
+ 
+ /** \brief Object Recognition Tutorial.
   *
   * \author Dimitrios Kanoulas
   */
@@ -127,7 +127,13 @@ class ObjRecTutorial
       */
     void
     segCylind (PointCPtr &in_cloud_ptr);
-    
+
+    /** \brief Segment Box from point cloud.
+      * 
+      * \input[in] in_cloud_ptr the input PointCloud2 pointer
+      */
+    void
+    segBox (PointCPtr &in_cloud_ptr);
     
     /** \brief Find the Pose of Cylinder.
       * 
@@ -135,7 +141,14 @@ class ObjRecTutorial
       */
     void
     findCylPose (PointCPtr &in_cloud_ptr);
-    
+
+    /** \brief Find the Pose of Box.
+      * 
+      * \input[in] in_cloud_ptr the input PointCloud2 pointer
+      */
+    void
+    findBoxPose (PointCPtr &in_cloud_ptr);   
+
     /** \brief Point Cloud publisher.
       * 
       *  \input pc_pub ROS publisher
@@ -166,6 +179,9 @@ class ObjRecTutorial
     /** \brief ROS geometry message point. */
     geometry_msgs::PointStamped g_cyl_pt_msg;
     
+    /** \brief ROS geometry message point. */
+    geometry_msgs::PointStamped g_box_pt_msg;
+
     /** \brief ROS pose publishers. */
     ros::Publisher g_pub_pose;
     
@@ -225,9 +241,15 @@ class ObjRecTutorial
     
     /** \brief Model coefficients for the culinder segmentation. */
     pcl::ModelCoefficients::Ptr g_coeff_cylinder;
+
+    /** \brief Model coefficients for the box segmentation. */
+    pcl::ModelCoefficients::Ptr g_coeff_box;
     
     /** \brief Point cloud to hold plane and cylinder points. */
-    PointCPtr g_cloud_plane, g_cloud_cylinder;
+    PointCPtr g_cloud_plane, g_cloud_cylinder, g_cloud_box;
+
+    /** \brief Point cloud to hold different colors. */
+    PointCPtr g_cloud_red, g_cloud_blue, g_cloud_purple;
     
     /** \brief cw1Q1: TF listener definition. */
     tf::TransformListener g_listener_;

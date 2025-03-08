@@ -32,6 +32,7 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 */
 #include <obj_rec_tutorial/obj_rec_tutorial.h>
+#include "obj_rec_tutorial.h"
 typedef pcl::PointXYZRGBA PointT;
 typedef pcl::PointCloud<PointT> PointC;
 typedef PointC::Ptr PointCPtr;
@@ -230,7 +231,6 @@ ObjRecTutorial::segBox(PointCPtr &in_cloud_ptr)
     float b = static_cast<float>(point.b) / 255.0;
 
     Eigen::Vector3f point_rgb(r, g, b);
-    // ROS_INFO_STREAM("Point RGB values: " << r << ", " << g << ", " << b);
     
     for (const auto& [color_name, target_rgb] : color_map) {
       if ((point_rgb - target_rgb).norm() < thresh && detected_color == "unknown") {
@@ -251,11 +251,7 @@ ObjRecTutorial::segBox(PointCPtr &in_cloud_ptr)
   ROS_INFO_STREAM("Detected color: " << detected_color);
   ROS_INFO_STREAM("PointCloud representing the " << detected_color << " box component: " << g_cloud_box->size() << " data points.");
 }
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
-void
 ObjRecTutorial::findCylPose (PointCPtr &in_cloud_ptr)
 {
   Eigen::Vector4f centroid_in;

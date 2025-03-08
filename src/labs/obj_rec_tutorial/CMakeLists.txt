@@ -157,25 +157,25 @@ add_library(obj_rec_tutorial_lib src/obj_rec_tutorial.cpp)
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/comp0129-s22-lab_node.cpp)
-#add_executable(obj_rec_tutorial_node src/obj_rec_tutorial_node.cpp)
+add_executable(obj_rec_tutorial_node src/obj_rec_tutorial_node.cpp)
 add_executable (correspondence_grouping src/correspondence_grouping.cpp)
 #add_executable (global_hypothesis_verification src/global_hypothesis_verification.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-#add_dependencies(obj_rec_tutorial_node
-#                 ${${PROJECT_NAME}_EXPORTED_TARGETS}
-#                 ${catkin_EXPORTED_TARGETS})
+add_dependencies(obj_rec_tutorial_node
+                ${${PROJECT_NAME}_EXPORTED_TARGETS}
+                ${catkin_EXPORTED_TARGETS})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 # set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
-#target_link_libraries(obj_rec_tutorial_node obj_rec_tutorial_lib
-#                                        ${catkin_LIBRARIES}
-#                                        ${PCL_LIBRARIES})
+target_link_libraries(obj_rec_tutorial_node obj_rec_tutorial_lib
+                                       ${catkin_LIBRARIES}
+                                       ${PCL_LIBRARIES})
 target_link_libraries (correspondence_grouping ${PCL_LIBRARIES})
 #target_link_libraries (global_hypothesis_verification ${PCL_LIBRARIES})
 
@@ -216,11 +216,11 @@ target_link_libraries (correspondence_grouping ${PCL_LIBRARIES})
 #  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 #)
-#install(TARGETS obj_rec_tutorial_node
-#  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#)
+install(TARGETS obj_rec_tutorial_node
+ ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+ LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+ RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark cpp header files for installation
 # install(DIRECTORY include/${PROJECT_NAME}/
