@@ -127,7 +127,7 @@ class ObjRecTutorial
       */
     void
     segCylind (PointCPtr &in_cloud_ptr);
-
+    
     /** \brief Segment Box from point cloud.
       * 
       * \input[in] in_cloud_ptr the input PointCloud2 pointer
@@ -147,8 +147,9 @@ class ObjRecTutorial
       * \input[in] in_cloud_ptr the input PointCloud2 pointer
       */
     void
-    findBoxPose (PointCPtr &in_cloud_ptr);   
+    findBoxPose (PointCPtr &in_cloud_ptr);
 
+    
     /** \brief Point Cloud publisher.
       * 
       *  \input pc_pub ROS publisher
@@ -177,7 +178,7 @@ class ObjRecTutorial
     ros::Publisher g_pub_cloud;
     
     /** \brief ROS geometry message point. */
-    geometry_msgs::PointStamped g_cyl_pt_msg;
+    geometry_msgs::PointStamped g_cyl_pt_msg, g_box_pt_msg;
     
     /** \brief ROS geometry message point. */
     geometry_msgs::PointStamped g_box_pt_msg;
@@ -240,13 +241,13 @@ class ObjRecTutorial
     pcl::ModelCoefficients::Ptr g_coeff_plane;
     
     /** \brief Model coefficients for the culinder segmentation. */
-    pcl::ModelCoefficients::Ptr g_coeff_cylinder;
+    pcl::ModelCoefficients::Ptr g_coeff_cylinder, g_coeff_box;
 
     /** \brief Model coefficients for the box segmentation. */
     pcl::ModelCoefficients::Ptr g_coeff_box;
     
     /** \brief Point cloud to hold plane and cylinder points. */
-    PointCPtr g_cloud_plane, g_cloud_cylinder, g_cloud_box;
+    PointCPtr g_cloud_plane, g_cloud_cylinder, g_cloud_box, g_cloud_box;
 
     /** \brief Point cloud to hold different colors. */
     PointCPtr g_cloud_red, g_cloud_blue, g_cloud_purple;

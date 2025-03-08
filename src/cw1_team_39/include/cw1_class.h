@@ -50,6 +50,9 @@ public:
    */
   cw1(ros::NodeHandle nh);
 
+  void printPoseStamped(const geometry_msgs::PoseStamped &pose);
+  void printPointStamped(const geometry_msgs::PointStamped &point);
+
   /**
    * @brief Callback for Task1 (pick & place)
    */
@@ -97,8 +100,8 @@ private:
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
 
   // Some default finger positions for fully open/closed
-  double gripper_open_   = 0.04; ///< 4cm open
-  double gripper_closed_ = 0.00; ///< fully closed
+  double gripper_open_   = 0.07; ///< 4cm open
+  double gripper_closed_ = 0.03; ///< fully closed
 
   ////////////////////////////////////////////////////////////////////////////////
   // PCL object detection properties
@@ -157,6 +160,7 @@ private:
    * @return Pair of target and object poses
    */
   std::pair<Eigen::Vector4f, Eigen::Vector4f> getTargetAndObject();
+
 };
 
 
